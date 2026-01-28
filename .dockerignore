@@ -1,0 +1,25 @@
+# Build artifacts
+*.pb.go
+*.pb.go.bak
+
+# Go build artifacts
+worker-agent
+bin/
+tmp/
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
