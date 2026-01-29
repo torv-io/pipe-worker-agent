@@ -20,37 +20,36 @@ type server struct {
 	pb.UnimplementedWorkerServiceServer
 	dockerClient *client.Client
 	nodeImage    string
+	networkName  string
+}
+
+func errorResponse(err error) *pb.ExecuteStageRunResponse {
+	return &pb.ExecuteStageRunResponse{
+		Status: pb.Status_FAILED,
+		Error:  err.Error(),
+	}
 }
 
 func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunRequest) (*pb.ExecuteStageRunResponse, error) {
 	log.Printf("Received stage run request: stage_id=%s, stage_run_id=%s", req.StageId, req.StageRunId)
 
-	// For now, assume it needs pipe-node-worker-agent
-	// TODO: Determine runner type based on stage configuration
-
 	// Prepare input JSON for pipe-node-worker-agent
 	// The bootstrap.sh expects: { code, context, stageConfig }
 	inputJSON := map[string]interface{}{
-		"code":        req.Code,        // Stage code blob
-		"context":     req.Context,     // Stage context JSON
-		"stageConfig": req.StageConfig, // Stage configuration (nodeVersion, dependencies, etc.)
+		"code":        req.Code,
+		"context":     req.Context,
+		"stageConfig": req.StageConfig,
 	}
 
 	inputBytes, err := json.Marshal(inputJSON)
 	if err != nil {
 		log.Printf("Error marshaling input JSON: %v", err)
-		return &pb.ExecuteStageRunResponse{
-			Status: pb.Status_FAILED,
-			Error:  err.Error(),
-		}, nil
+		return errorResponse(err), nil
 	}
 
-	// Create container configuration
 	containerConfig := &container.Config{
 		Image: s.nodeImage,
-		Env: []string{
-			// WORK_DIR and CONTEXT will be set by bootstrap.sh from stdin
-		},
+		Env: []string{}, // WORK_DIR and CONTEXT will be set by bootstrap.sh from stdin
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -60,17 +59,13 @@ func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunReq
 
 	hostConfig := &container.HostConfig{
 		AutoRemove: true,
-		NetworkMode: "torv_pipe_worker_network",
+		NetworkMode: s.networkName,
 	}
 
-	// Create container
 	createResp, err := s.dockerClient.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, "")
 	if err != nil {
 		log.Printf("Error creating container: %v", err)
-		return &pb.ExecuteStageRunResponse{
-			Status: pb.Status_FAILED,
-			Error:  err.Error(),
-		}, nil
+		return errorResponse(err), nil
 	}
 
 	containerID := createResp.ID
@@ -85,30 +80,19 @@ func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunReq
 	})
 	if err != nil {
 		log.Printf("Error attaching to container: %v", err)
-		return &pb.ExecuteStageRunResponse{
-			Status: pb.Status_FAILED,
-			Error:  err.Error(),
-		}, nil
+		return errorResponse(err), nil
 	}
 	defer attachResp.Close()
 
-	// Start container
 	if err := s.dockerClient.ContainerStart(ctx, containerID, container.StartOptions{}); err != nil {
 		log.Printf("Error starting container: %v", err)
-		return &pb.ExecuteStageRunResponse{
-			Status: pb.Status_FAILED,
-			Error:  err.Error(),
-		}, nil
+		return errorResponse(err), nil
 	}
 
 	// Send input JSON to container stdin (with newline for jq to parse)
-	inputWithNewline := append(inputBytes, '\n')
-	if _, err := attachResp.Conn.Write(inputWithNewline); err != nil {
+	if _, err := attachResp.Conn.Write(append(inputBytes, '\n')); err != nil {
 		log.Printf("Error writing to container stdin: %v", err)
-		return &pb.ExecuteStageRunResponse{
-			Status: pb.Status_FAILED,
-			Error:  err.Error(),
-		}, nil
+		return errorResponse(err), nil
 	}
 	attachResp.Conn.Close()
 
@@ -116,10 +100,7 @@ func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunReq
 	output, err := io.ReadAll(attachResp.Reader)
 	if err != nil && err != io.EOF {
 		log.Printf("Error reading container output: %v", err)
-		return &pb.ExecuteStageRunResponse{
-			Status: pb.Status_FAILED,
-			Error:  err.Error(),
-		}, nil
+		return errorResponse(err), nil
 	}
 
 	// Wait for container to finish
@@ -128,10 +109,7 @@ func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunReq
 	case err := <-errCh:
 		if err != nil {
 			log.Printf("Error waiting for container: %v", err)
-			return &pb.ExecuteStageRunResponse{
-				Status: pb.Status_FAILED,
-				Error:  err.Error(),
-			}, nil
+			return errorResponse(err), nil
 		}
 	case <-waitResp:
 	}
@@ -146,49 +124,35 @@ func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunReq
 		}, nil
 	}
 
-	// Check if execution was successful
-	success, ok := result["success"].(bool)
-	if !ok {
-		success = false
-	}
-
+	success, _ := result["success"].(bool)
 	status := pb.Status_EXECUTED
 	if !success {
 		status = pb.Status_FAILED
 	}
 
-	errorMsg := ""
-	if errStr, ok := result["error"].(string); ok && errStr != "" {
-		errorMsg = errStr
-	}
-
+	errorMsg, _ := result["error"].(string)
 	log.Printf("Container execution completed: success=%v, error=%s", success, errorMsg)
 
-	return &pb.ExecuteStageRunResponse{
-		Status: status,
-		Error:  errorMsg,
-		Outputs: func() map[string]string {
-			if outputs, ok := result["outputs"].(map[string]interface{}); ok {
-				outputMap := make(map[string]string)
-				for k, v := range outputs {
-					if vStr, ok := v.(string); ok {
-						outputMap[k] = vStr
-					} else {
-						// Convert to JSON string if not already a string
-						if vBytes, err := json.Marshal(v); err == nil {
-							outputMap[k] = string(vBytes)
-						}
-					}
-				}
-				return outputMap
+	// Convert outputs to map[string]string, marshaling non-string values to JSON
+	outputs := make(map[string]string)
+	if outputsMap, ok := result["outputs"].(map[string]interface{}); ok {
+		for k, v := range outputsMap {
+			if vStr, ok := v.(string); ok {
+				outputs[k] = vStr
+			} else if vBytes, err := json.Marshal(v); err == nil {
+				outputs[k] = string(vBytes)
 			}
-			return nil
-		}(),
+		}
+	}
+
+	return &pb.ExecuteStageRunResponse{
+		Status:  status,
+		Error:   errorMsg,
+		Outputs: outputs,
 	}, nil
 }
 
 func main() {
-	// Initialize Docker client
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Fatalf("Failed to create Docker client: %v", err)
@@ -197,15 +161,51 @@ func main() {
 	// Get node worker agent image from environment or use default
 	nodeImage := os.Getenv("NODE_WORKER_AGENT_IMAGE")
 	if nodeImage == "" {
-		// Default to GHCR image
 		nodeImage = "ghcr.io/torv-io/pipe-node-worker-agent:latest"
 		log.Printf("Warning: NODE_WORKER_AGENT_IMAGE not set, using default: %s", nodeImage)
 	}
 
+	// Get network name from environment or detect it
+	networkName := os.Getenv("WORKER_NETWORK_NAME")
+	if networkName == "" {
+		// Try to detect the network this container is running on
+		ctx := context.Background()
+		// Try multiple methods to find container name
+		containerNames := []string{
+			os.Getenv("HOSTNAME"),
+			os.Getenv("CONTAINER_NAME"),
+		}
+		if hostname, _ := os.Hostname(); hostname != "" {
+			containerNames = append(containerNames, hostname)
+		}
+		containerNames = append(containerNames, "pipe-worker-agent") // Fallback to known container name
+		
+		for _, containerName := range containerNames {
+			if containerName == "" {
+				continue
+			}
+			containerInfo, err := dockerClient.ContainerInspect(ctx, containerName)
+			if err == nil && len(containerInfo.NetworkSettings.Networks) > 0 {
+				// Use the first network found
+				for netName := range containerInfo.NetworkSettings.Networks {
+					networkName = netName
+					log.Printf("Auto-detected network: %s (from container: %s)", networkName, containerName)
+					break
+				}
+				if networkName != "" {
+					break
+				}
+			}
+		}
+		if networkName == "" {
+			networkName = "torv_pipe_worker_network"
+			log.Printf("Warning: WORKER_NETWORK_NAME not set and could not auto-detect, using default: %s", networkName)
+		}
+	}
+
 	// Pull the image to ensure it's available
 	log.Printf("Pulling image: %s", nodeImage)
-	reader, err := dockerClient.ImagePull(context.Background(), nodeImage, types.ImagePullOptions{})
-	if err != nil {
+	if reader, err := dockerClient.ImagePull(context.Background(), nodeImage, types.ImagePullOptions{}); err != nil {
 		log.Printf("Warning: Failed to pull image (may already exist): %v", err)
 	} else {
 		io.Copy(io.Discard, reader)
@@ -222,6 +222,7 @@ func main() {
 	pb.RegisterWorkerServiceServer(s, &server{
 		dockerClient: dockerClient,
 		nodeImage:    nodeImage,
+		networkName:  networkName,
 	})
 	reflection.Register(s)
 
