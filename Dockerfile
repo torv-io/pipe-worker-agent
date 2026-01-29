@@ -29,7 +29,10 @@ RUN protoc --go_out=. --go_opt=paths=source_relative \
     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
     proto/worker.proto
 
-# Build the binary (go build will automatically download missing dependencies)
+# Download dependencies to update go.sum
+RUN go mod download
+
+# Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o worker-agent .
 
 # Runtime stage
