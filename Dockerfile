@@ -17,20 +17,19 @@ WORKDIR /build
 
 # Copy go mod files
 COPY go.mod go.sum ./
-RUN go mod download
 
 # Copy proto files
 COPY proto/ ./proto/
+
+# Copy source code (needed for go mod to resolve imports)
+COPY main.go ./
 
 # Generate proto code
 RUN protoc --go_out=. --go_opt=paths=source_relative \
     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
     proto/worker.proto
 
-# Copy source code
-COPY main.go ./
-
-# Build the binary
+# Build the binary (go build will automatically download missing dependencies)
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o worker-agent .
 
 # Runtime stage
