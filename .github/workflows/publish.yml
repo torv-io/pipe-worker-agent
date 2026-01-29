@@ -21,16 +21,11 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout monorepo
         uses: actions/checkout@v4
         with:
-          submodules: recursive
-
-      - name: Checkout pipe-shared (if monorepo)
-        uses: actions/checkout@v4
-        with:
-          repository: torv-io/pipe-shared
-          path: pipe-shared
+          repository: torv-io/pipe
+          path: .
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
@@ -60,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./pipe-worker-agent/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

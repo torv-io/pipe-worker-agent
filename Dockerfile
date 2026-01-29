@@ -16,13 +16,13 @@ RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest && \
 WORKDIR /build
 
 # Copy go mod files
-COPY go.mod go.sum ./
+COPY pipe-worker-agent/go.mod pipe-worker-agent/go.sum ./
 
-# Copy proto files (from checked out pipe-shared)
+# Copy proto files
 COPY pipe-shared/proto/ ./proto/
 
 # Copy source code (needed for go mod to resolve imports)
-COPY main.go ./
+COPY pipe-worker-agent/main.go ./
 
 # Generate proto code
 RUN protoc --go_out=. --go_opt=paths=source_relative \
