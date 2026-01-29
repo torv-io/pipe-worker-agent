@@ -77,7 +77,7 @@ func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunReq
 	log.Printf("Created container: %s", containerID)
 
 	// Attach to container before starting to capture stdout/stderr
-	attachResp, err := s.dockerClient.ContainerAttach(ctx, containerID, types.ContainerAttachOptions{
+	attachResp, err := s.dockerClient.ContainerAttach(ctx, containerID, container.AttachOptions{
 		Stream: true,
 		Stdin:  true,
 		Stdout: true,
@@ -93,7 +93,7 @@ func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunReq
 	defer attachResp.Close()
 
 	// Start container
-	if err := s.dockerClient.ContainerStart(ctx, containerID, types.ContainerStartOptions{}); err != nil {
+	if err := s.dockerClient.ContainerStart(ctx, containerID, container.StartOptions{}); err != nil {
 		log.Printf("Error starting container: %v", err)
 		return &pb.ExecuteStageRunResponse{
 			Status: pb.Status_FAILED,
