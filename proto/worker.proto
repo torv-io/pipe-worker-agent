@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "torv.io/worker-agent/proto";
+
+// WorkerService handles stage execution requests
+service WorkerService {
+  // ExecuteStageRun executes a stage run request
+  rpc ExecuteStageRun(ExecuteStageRunRequest) returns (ExecuteStageRunResponse);
+}
+
+// ExecuteStageRunRequest contains the information needed to execute a stage
+message ExecuteStageRunRequest {
+  string stage_id = 1;
+  string stage_run_id = 2;
+  string code = 3;           // Stage code blob (JavaScript/TypeScript code)
+  string context = 4;        // Stage context as JSON string
+  string stage_config = 5;   // Stage configuration as JSON string (nodeVersion, dependencies, etc.)
+}
+
+// ExecuteStageRunResponse contains the result of stage execution
+message ExecuteStageRunResponse {
+  Status status = 1;
+  string error = 2;                    // Error message if execution failed
+  map<string, string> outputs = 3;    // Stage outputs
+}
+
+// Status represents the execution status
+enum Status {
+  UNSPECIFIED = 0;
+  EXECUTED = 1;
+  FAILED = 2;
+}
