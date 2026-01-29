@@ -59,7 +59,7 @@ func (s *server) ExecuteStageRun(ctx context.Context, req *pb.ExecuteStageRunReq
 
 	hostConfig := &container.HostConfig{
 		AutoRemove: true,
-		NetworkMode: s.networkName,
+		NetworkMode: container.NetworkMode(s.networkName),
 	}
 
 	createResp, err := s.dockerClient.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, "")
