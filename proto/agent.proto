@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package agent;
+
+option go_package = "torv.io/worker-agent/proto/agent";
+
+service AgentService {
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+message HeartbeatRequest {
+  string worker_id = 1;
+  string status = 2;
+}
+
+message HeartbeatResponse {
+  bool success = 1;
+}
