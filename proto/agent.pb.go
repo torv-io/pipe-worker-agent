@@ -128,7 +128,7 @@ const file_proto_agent_proto_rawDesc = "" +
 	"\x11HeartbeatResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess2N\n" +
 	"\fAgentService\x12>\n" +
-	"\tHeartbeat\x12\x17.agent.HeartbeatRequest\x1a\x18.agent.HeartbeatResponseB\"Z torv.io/worker-agent/proto/agentb\x06proto3"
+	"\tHeartbeat\x12\x17.agent.HeartbeatRequest\x1a\x18.agent.HeartbeatResponseB\x1cZ\x1atorv.io/worker-agent/protob\x06proto3"
 
 var (
 	file_proto_agent_proto_rawDescOnce sync.Once

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package agent;
 
-option go_package = "torv.io/worker-agent/proto/agent";
+option go_package = "torv.io/worker-agent/proto";
 
 service AgentService {
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);

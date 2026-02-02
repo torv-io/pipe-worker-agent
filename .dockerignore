@@ -1,6 +1,5 @@
 # Build artifacts
-*.pb.go
-*.pb.go.bak
+# *.pb.go removed so they are included in docker build
 
 # Go build artifacts
 worker-agent
