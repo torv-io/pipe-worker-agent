@@ -5,7 +5,16 @@ package agent;
 option go_package = "torv.io/worker-agent/proto";
 
 service AgentService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+message RegisterRequest {}
+
+message RegisterResponse {
+  bool success = 1;
+  string worker_id = 2;
+  string error = 3;
 }
 
 message HeartbeatRequest {
@@ -15,4 +24,5 @@ message HeartbeatRequest {
 
 message HeartbeatResponse {
   bool success = 1;
+  string assigned_worker_id = 2;
 }

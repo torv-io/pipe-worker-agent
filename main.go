@@ -112,16 +112,60 @@ func startHeartbeat(ctx context.Context, orchestratorURL, workerID string) {
 	}
 }
 
-func main() {
+func ensureWorkerID(orchestratorURL string) string {
 	workerID := os.Getenv("WORKER_ID")
-	if workerID == "" {
-		log.Fatal("WORKER_ID environment variable is required")
+	if workerID != "" {
+		return workerID
 	}
 
+	// Try loading from persistent file
+	idFile := "/data/worker_id"
+	data, err := os.ReadFile(idFile)
+	if err == nil && len(data) > 0 {
+		id := string(data)
+		log.Printf("[Worker] Loaded ID from storage: %s", id)
+		return id
+	}
+
+	// Register with orchestrator using Peer Identification (IP/Port)
+	log.Println("[Worker] No ID found. Registering with orchestrator...")
+	conn, err := grpc.NewClient(orchestratorURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("[Worker] Failed to connect to orchestrator for registration: %v", err)
+	}
+	defer conn.Close()
+
+	client := pb.NewAgentServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	resp, err := client.Register(ctx, &pb.RegisterRequest{})
+	if err != nil {
+		log.Fatalf("[Worker] Registration RPC failed: %v", err)
+	}
+	if !resp.Success {
+		log.Fatalf("[Worker] Registration rejected by orchestrator: %s", resp.Error)
+	}
+
+	workerID = resp.WorkerId
+	log.Printf("[Worker] Assigned identity: %s", workerID)
+
+	// Save for future boots
+	if err := os.WriteFile(idFile, []byte(workerID), 0644); err != nil {
+		log.Printf("[Worker] Warning: Failed to persist ID to %s: %v", idFile, err)
+	}
+
+	return workerID
+}
+
+func main() {
 	orchestratorURL := os.Getenv("ORCHESTRATOR_URL")
 	if orchestratorURL == "" {
-		orchestratorURL = "localhost:50052"
+		orchestratorURL = "torv.io:50052"
 	}
+
+	// Bootstrap identity
+	workerID := ensureWorkerID(orchestratorURL)
 
 	cli, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	img := os.Getenv("NODE_WORKER_AGENT_IMAGE")
