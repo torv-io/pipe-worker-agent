@@ -126,6 +126,7 @@ func ensureWorkerID(orchestratorURL string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	_ = secret // Temporarily suppress unused variable error until proto is regenerated
 	// Using a map/reflection hack or just waiting for proto regen if the field is missing
 	resp, err := client.Register(ctx, &pb.RegisterRequest{
 		// Secret: secret, // Commented out temporarily until proto is regenerated in CI/local
