@@ -9,7 +9,9 @@ service AgentService {
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
 }
 
-message RegisterRequest {}
+message RegisterRequest {
+  string secret = 1;
+}
 
 message RegisterResponse {
   bool success = 1;
