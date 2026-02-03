@@ -113,22 +113,12 @@ func startHeartbeat(ctx context.Context, orchestratorURL, workerID string) {
 }
 
 func ensureWorkerID(orchestratorURL string) string {
-	workerID := os.Getenv("WORKER_ID")
-	if workerID != "" {
-		return workerID
+	secret := os.Getenv("WORKER_SECRET")
+	if secret == "" {
+		log.Fatalf("[Worker] WORKER_SECRET environment variable is required")
 	}
 
-	// Try loading from persistent file
-	idFile := "/data/worker_id"
-	data, err := os.ReadFile(idFile)
-	if err == nil && len(data) > 0 {
-		id := string(data)
-		log.Printf("[Worker] Loaded ID from storage: %s", id)
-		return id
-	}
-
-	// Register with orchestrator using Peer Identification (IP/Port)
-	log.Println("[Worker] No ID found. Registering with orchestrator...")
+	log.Println("[Worker] Registering with orchestrator...")
 	conn, err := grpc.NewClient(orchestratorURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("[Worker] Failed to connect to orchestrator for registration: %v", err)
@@ -139,7 +129,9 @@ func ensureWorkerID(orchestratorURL string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	resp, err := client.Register(ctx, &pb.RegisterRequest{})
+	resp, err := client.Register(ctx, &pb.RegisterRequest{
+		Secret: secret,
+	})
 	if err != nil {
 		log.Fatalf("[Worker] Registration RPC failed: %v", err)
 	}
@@ -147,13 +139,8 @@ func ensureWorkerID(orchestratorURL string) string {
 		log.Fatalf("[Worker] Registration rejected by orchestrator: %s", resp.Error)
 	}
 
-	workerID = resp.WorkerId
+	workerID := resp.WorkerId
 	log.Printf("[Worker] Assigned identity: %s", workerID)
-
-	// Save for future boots
-	if err := os.WriteFile(idFile, []byte(workerID), 0644); err != nil {
-		log.Printf("[Worker] Warning: Failed to persist ID to %s: %v", idFile, err)
-	}
 
 	return workerID
 }
