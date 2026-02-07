@@ -23,6 +23,7 @@ const (
 
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Secret        string                 `protobuf:"bytes,1,opt,name=secret,proto3" json:"secret,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -55,6 +56,13 @@ func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use RegisterRequest.ProtoReflect.Descriptor instead.
 func (*RegisterRequest) Descriptor() ([]byte, []int) {
 	return file_proto_agent_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *RegisterRequest) GetSecret() string {
+	if x != nil {
+		return x.Secret
+	}
+	return ""
 }
 
 type RegisterResponse struct {
@@ -221,12 +229,125 @@ func (x *HeartbeatResponse) GetAssignedWorkerId() string {
 	return ""
 }
 
+type MessageRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkerId      string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
+	StageRunId    string                 `protobuf:"bytes,2,opt,name=stage_run_id,json=stageRunId,proto3" json:"stage_run_id,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	Level         string                 `protobuf:"bytes,4,opt,name=level,proto3" json:"level,omitempty"` // debug, info, warn, error
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MessageRequest) Reset() {
+	*x = MessageRequest{}
+	mi := &file_proto_agent_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageRequest) ProtoMessage() {}
+
+func (x *MessageRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_agent_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageRequest.ProtoReflect.Descriptor instead.
+func (*MessageRequest) Descriptor() ([]byte, []int) {
+	return file_proto_agent_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *MessageRequest) GetWorkerId() string {
+	if x != nil {
+		return x.WorkerId
+	}
+	return ""
+}
+
+func (x *MessageRequest) GetStageRunId() string {
+	if x != nil {
+		return x.StageRunId
+	}
+	return ""
+}
+
+func (x *MessageRequest) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *MessageRequest) GetLevel() string {
+	if x != nil {
+		return x.Level
+	}
+	return ""
+}
+
+type MessageResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MessageResponse) Reset() {
+	*x = MessageResponse{}
+	mi := &file_proto_agent_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageResponse) ProtoMessage() {}
+
+func (x *MessageResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_agent_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageResponse.ProtoReflect.Descriptor instead.
+func (*MessageResponse) Descriptor() ([]byte, []int) {
+	return file_proto_agent_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *MessageResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 var File_proto_agent_proto protoreflect.FileDescriptor
 
 const file_proto_agent_proto_rawDesc = "" +
 	"\n" +
-	"\x11proto/agent.proto\x12\x05agent\"\x11\n" +
-	"\x0fRegisterRequest\"_\n" +
+	"\x11proto/agent.proto\x12\x05agent\")\n" +
+	"\x0fRegisterRequest\x12\x16\n" +
+	"\x06secret\x18\x01 \x01(\tR\x06secret\"_\n" +
 	"\x10RegisterResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1b\n" +
 	"\tworker_id\x18\x02 \x01(\tR\bworkerId\x12\x14\n" +
@@ -236,10 +357,19 @@ const file_proto_agent_proto_rawDesc = "" +
 	"\x06status\x18\x02 \x01(\tR\x06status\"[\n" +
 	"\x11HeartbeatResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12,\n" +
-	"\x12assigned_worker_id\x18\x02 \x01(\tR\x10assignedWorkerId2\x8b\x01\n" +
+	"\x12assigned_worker_id\x18\x02 \x01(\tR\x10assignedWorkerId\"\x7f\n" +
+	"\x0eMessageRequest\x12\x1b\n" +
+	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12 \n" +
+	"\fstage_run_id\x18\x02 \x01(\tR\n" +
+	"stageRunId\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12\x14\n" +
+	"\x05level\x18\x04 \x01(\tR\x05level\"+\n" +
+	"\x0fMessageResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xc5\x01\n" +
 	"\fAgentService\x12;\n" +
 	"\bRegister\x12\x16.agent.RegisterRequest\x1a\x17.agent.RegisterResponse\x12>\n" +
-	"\tHeartbeat\x12\x17.agent.HeartbeatRequest\x1a\x18.agent.HeartbeatResponseB\x1cZ\x1atorv.io/worker-agent/protob\x06proto3"
+	"\tHeartbeat\x12\x17.agent.HeartbeatRequest\x1a\x18.agent.HeartbeatResponse\x128\n" +
+	"\aMessage\x12\x15.agent.MessageRequest\x1a\x16.agent.MessageResponseB\x1cZ\x1atorv.io/worker-agent/protob\x06proto3"
 
 var (
 	file_proto_agent_proto_rawDescOnce sync.Once
@@ -253,20 +383,24 @@ func file_proto_agent_proto_rawDescGZIP() []byte {
 	return file_proto_agent_proto_rawDescData
 }
 
-var file_proto_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_proto_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_proto_agent_proto_goTypes = []any{
 	(*RegisterRequest)(nil),   // 0: agent.RegisterRequest
 	(*RegisterResponse)(nil),  // 1: agent.RegisterResponse
 	(*HeartbeatRequest)(nil),  // 2: agent.HeartbeatRequest
 	(*HeartbeatResponse)(nil), // 3: agent.HeartbeatResponse
+	(*MessageRequest)(nil),    // 4: agent.MessageRequest
+	(*MessageResponse)(nil),   // 5: agent.MessageResponse
 }
 var file_proto_agent_proto_depIdxs = []int32{
 	0, // 0: agent.AgentService.Register:input_type -> agent.RegisterRequest
 	2, // 1: agent.AgentService.Heartbeat:input_type -> agent.HeartbeatRequest
-	1, // 2: agent.AgentService.Register:output_type -> agent.RegisterResponse
-	3, // 3: agent.AgentService.Heartbeat:output_type -> agent.HeartbeatResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	4, // 2: agent.AgentService.Message:input_type -> agent.MessageRequest
+	1, // 3: agent.AgentService.Register:output_type -> agent.RegisterResponse
+	3, // 4: agent.AgentService.Heartbeat:output_type -> agent.HeartbeatResponse
+	5, // 5: agent.AgentService.Message:output_type -> agent.MessageResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -283,7 +417,7 @@ func file_proto_agent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_agent_proto_rawDesc), len(file_proto_agent_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
