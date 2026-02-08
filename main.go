@@ -217,15 +217,15 @@ func ensureWorkerID(orchestratorURL string) string {
 
 	address := getEnv("WORKER_ADDRESS", "")
 	if address == "" {
-		host, _ := os.Hostname()
-		if host == "" {
-			host = "localhost"
+		ip, err := getOutboundIP(orchestratorURL)
+		if err != nil {
+			log.Fatalf("[Worker] Failed to determine outbound IP: %v", err)
 		}
 		port := strings.TrimPrefix(grpcPort, ":")
 		if port == "" {
 			port = "50051"
 		}
-		address = host + ":" + port
+		address = ip + ":" + port
 	}
 
 	resp, err := pb.NewAgentServiceClient(conn).Register(ctx, &pb.RegisterRequest{
@@ -270,4 +270,16 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// getOutboundIP returns the IP the worker would use when connecting to the given address.
+// Used so the orchestrator can reach back to this worker.
+func getOutboundIP(connectTo string) (string, error) {
+	conn, err := net.Dial("tcp", connectTo)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+	addr := conn.LocalAddr().(*net.TCPAddr)
+	return addr.IP.String(), nil
 }
