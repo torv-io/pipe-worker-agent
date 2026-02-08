@@ -215,7 +215,22 @@ func ensureWorkerID(orchestratorURL string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	resp, err := pb.NewAgentServiceClient(conn).Register(ctx, &pb.RegisterRequest{})
+	address := getEnv("WORKER_ADDRESS", "")
+	if address == "" {
+		host, _ := os.Hostname()
+		if host == "" {
+			host = "localhost"
+		}
+		port := strings.TrimPrefix(grpcPort, ":")
+		if port == "" {
+			port = "50051"
+		}
+		address = host + ":" + port
+	}
+
+	resp, err := pb.NewAgentServiceClient(conn).Register(ctx, &pb.RegisterRequest{
+		Address: address,
+	})
 	if err != nil {
 		log.Fatalf("[Worker] Registration RPC failed: %v", err)
 	}

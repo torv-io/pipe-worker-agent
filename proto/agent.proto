@@ -12,6 +12,7 @@ service AgentService {
 
 message RegisterRequest {
   string secret = 1;
+  string address = 2;
 }
 
 message RegisterResponse {
