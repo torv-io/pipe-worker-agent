@@ -24,7 +24,7 @@ const (
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Secret        string                 `protobuf:"bytes,1,opt,name=secret,proto3" json:"secret,omitempty"`
-	Address       string                 `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"` // host:port for reaching this worker's WorkerService
+	Address       string                 `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -349,6 +349,276 @@ func (x *MessageResponse) GetSuccess() bool {
 	return false
 }
 
+type WorkerMessage struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	WorkerId string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
+	// Types that are valid to be assigned to Msg:
+	//
+	//	*WorkerMessage_Subscribe
+	//	*WorkerMessage_Result
+	Msg           isWorkerMessage_Msg `protobuf_oneof:"msg"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorkerMessage) Reset() {
+	*x = WorkerMessage{}
+	mi := &file_proto_agent_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkerMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkerMessage) ProtoMessage() {}
+
+func (x *WorkerMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_agent_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkerMessage.ProtoReflect.Descriptor instead.
+func (*WorkerMessage) Descriptor() ([]byte, []int) {
+	return file_proto_agent_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *WorkerMessage) GetWorkerId() string {
+	if x != nil {
+		return x.WorkerId
+	}
+	return ""
+}
+
+func (x *WorkerMessage) GetMsg() isWorkerMessage_Msg {
+	if x != nil {
+		return x.Msg
+	}
+	return nil
+}
+
+func (x *WorkerMessage) GetSubscribe() *SubscribeRequest {
+	if x != nil {
+		if x, ok := x.Msg.(*WorkerMessage_Subscribe); ok {
+			return x.Subscribe
+		}
+	}
+	return nil
+}
+
+func (x *WorkerMessage) GetResult() *ExecuteResult {
+	if x != nil {
+		if x, ok := x.Msg.(*WorkerMessage_Result); ok {
+			return x.Result
+		}
+	}
+	return nil
+}
+
+type isWorkerMessage_Msg interface {
+	isWorkerMessage_Msg()
+}
+
+type WorkerMessage_Subscribe struct {
+	Subscribe *SubscribeRequest `protobuf:"bytes,2,opt,name=subscribe,proto3,oneof"`
+}
+
+type WorkerMessage_Result struct {
+	Result *ExecuteResult `protobuf:"bytes,3,opt,name=result,proto3,oneof"`
+}
+
+func (*WorkerMessage_Subscribe) isWorkerMessage_Msg() {}
+
+func (*WorkerMessage_Result) isWorkerMessage_Msg() {}
+
+type SubscribeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscribeRequest) Reset() {
+	*x = SubscribeRequest{}
+	mi := &file_proto_agent_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscribeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeRequest) ProtoMessage() {}
+
+func (x *SubscribeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_agent_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeRequest.ProtoReflect.Descriptor instead.
+func (*SubscribeRequest) Descriptor() ([]byte, []int) {
+	return file_proto_agent_proto_rawDescGZIP(), []int{7}
+}
+
+type WorkItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StageId       string                 `protobuf:"bytes,1,opt,name=stage_id,json=stageId,proto3" json:"stage_id,omitempty"`
+	StageRunId    string                 `protobuf:"bytes,2,opt,name=stage_run_id,json=stageRunId,proto3" json:"stage_run_id,omitempty"`
+	Code          string                 `protobuf:"bytes,3,opt,name=code,proto3" json:"code,omitempty"`
+	Context       string                 `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`
+	StageConfig   string                 `protobuf:"bytes,5,opt,name=stage_config,json=stageConfig,proto3" json:"stage_config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorkItem) Reset() {
+	*x = WorkItem{}
+	mi := &file_proto_agent_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkItem) ProtoMessage() {}
+
+func (x *WorkItem) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_agent_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkItem.ProtoReflect.Descriptor instead.
+func (*WorkItem) Descriptor() ([]byte, []int) {
+	return file_proto_agent_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *WorkItem) GetStageId() string {
+	if x != nil {
+		return x.StageId
+	}
+	return ""
+}
+
+func (x *WorkItem) GetStageRunId() string {
+	if x != nil {
+		return x.StageRunId
+	}
+	return ""
+}
+
+func (x *WorkItem) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *WorkItem) GetContext() string {
+	if x != nil {
+		return x.Context
+	}
+	return ""
+}
+
+func (x *WorkItem) GetStageConfig() string {
+	if x != nil {
+		return x.StageConfig
+	}
+	return ""
+}
+
+type ExecuteResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StageRunId    string                 `protobuf:"bytes,1,opt,name=stage_run_id,json=stageRunId,proto3" json:"stage_run_id,omitempty"`
+	Status        int32                  `protobuf:"varint,2,opt,name=status,proto3" json:"status,omitempty"`
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	Outputs       map[string]string      `protobuf:"bytes,4,rep,name=outputs,proto3" json:"outputs,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExecuteResult) Reset() {
+	*x = ExecuteResult{}
+	mi := &file_proto_agent_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExecuteResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExecuteResult) ProtoMessage() {}
+
+func (x *ExecuteResult) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_agent_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExecuteResult.ProtoReflect.Descriptor instead.
+func (*ExecuteResult) Descriptor() ([]byte, []int) {
+	return file_proto_agent_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ExecuteResult) GetStageRunId() string {
+	if x != nil {
+		return x.StageRunId
+	}
+	return ""
+}
+
+func (x *ExecuteResult) GetStatus() int32 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *ExecuteResult) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *ExecuteResult) GetOutputs() map[string]string {
+	if x != nil {
+		return x.Outputs
+	}
+	return nil
+}
+
 var File_proto_agent_proto protoreflect.FileDescriptor
 
 const file_proto_agent_proto_rawDesc = "" +
@@ -374,11 +644,34 @@ const file_proto_agent_proto_rawDesc = "" +
 	"\amessage\x18\x03 \x01(\tR\amessage\x12\x14\n" +
 	"\x05level\x18\x04 \x01(\tR\x05level\"+\n" +
 	"\x0fMessageResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xc5\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"\x9c\x01\n" +
+	"\rWorkerMessage\x12\x1b\n" +
+	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x127\n" +
+	"\tsubscribe\x18\x02 \x01(\v2\x17.agent.SubscribeRequestH\x00R\tsubscribe\x12.\n" +
+	"\x06result\x18\x03 \x01(\v2\x14.agent.ExecuteResultH\x00R\x06resultB\x05\n" +
+	"\x03msg\"\x12\n" +
+	"\x10SubscribeRequest\"\x98\x01\n" +
+	"\bWorkItem\x12\x19\n" +
+	"\bstage_id\x18\x01 \x01(\tR\astageId\x12 \n" +
+	"\fstage_run_id\x18\x02 \x01(\tR\n" +
+	"stageRunId\x12\x12\n" +
+	"\x04code\x18\x03 \x01(\tR\x04code\x12\x18\n" +
+	"\acontext\x18\x04 \x01(\tR\acontext\x12!\n" +
+	"\fstage_config\x18\x05 \x01(\tR\vstageConfig\"\xd8\x01\n" +
+	"\rExecuteResult\x12 \n" +
+	"\fstage_run_id\x18\x01 \x01(\tR\n" +
+	"stageRunId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\x05R\x06status\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\x12;\n" +
+	"\aoutputs\x18\x04 \x03(\v2!.agent.ExecuteResult.OutputsEntryR\aoutputs\x1a:\n" +
+	"\fOutputsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\xfd\x01\n" +
 	"\fAgentService\x12;\n" +
 	"\bRegister\x12\x16.agent.RegisterRequest\x1a\x17.agent.RegisterResponse\x12>\n" +
 	"\tHeartbeat\x12\x17.agent.HeartbeatRequest\x1a\x18.agent.HeartbeatResponse\x128\n" +
-	"\aMessage\x12\x15.agent.MessageRequest\x1a\x16.agent.MessageResponseB\x1cZ\x1atorv.io/worker-agent/protob\x06proto3"
+	"\aMessage\x12\x15.agent.MessageRequest\x1a\x16.agent.MessageResponse\x126\n" +
+	"\tSubscribe\x12\x14.agent.WorkerMessage\x1a\x0f.agent.WorkItem(\x010\x01B\x1cZ\x1atorv.io/worker-agent/protob\x06proto3"
 
 var (
 	file_proto_agent_proto_rawDescOnce sync.Once
@@ -392,7 +685,7 @@ func file_proto_agent_proto_rawDescGZIP() []byte {
 	return file_proto_agent_proto_rawDescData
 }
 
-var file_proto_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_proto_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_proto_agent_proto_goTypes = []any{
 	(*RegisterRequest)(nil),   // 0: agent.RegisterRequest
 	(*RegisterResponse)(nil),  // 1: agent.RegisterResponse
@@ -400,19 +693,29 @@ var file_proto_agent_proto_goTypes = []any{
 	(*HeartbeatResponse)(nil), // 3: agent.HeartbeatResponse
 	(*MessageRequest)(nil),    // 4: agent.MessageRequest
 	(*MessageResponse)(nil),   // 5: agent.MessageResponse
+	(*WorkerMessage)(nil),     // 6: agent.WorkerMessage
+	(*SubscribeRequest)(nil),  // 7: agent.SubscribeRequest
+	(*WorkItem)(nil),          // 8: agent.WorkItem
+	(*ExecuteResult)(nil),     // 9: agent.ExecuteResult
+	nil,                       // 10: agent.ExecuteResult.OutputsEntry
 }
 var file_proto_agent_proto_depIdxs = []int32{
-	0, // 0: agent.AgentService.Register:input_type -> agent.RegisterRequest
-	2, // 1: agent.AgentService.Heartbeat:input_type -> agent.HeartbeatRequest
-	4, // 2: agent.AgentService.Message:input_type -> agent.MessageRequest
-	1, // 3: agent.AgentService.Register:output_type -> agent.RegisterResponse
-	3, // 4: agent.AgentService.Heartbeat:output_type -> agent.HeartbeatResponse
-	5, // 5: agent.AgentService.Message:output_type -> agent.MessageResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	7,  // 0: agent.WorkerMessage.subscribe:type_name -> agent.SubscribeRequest
+	9,  // 1: agent.WorkerMessage.result:type_name -> agent.ExecuteResult
+	10, // 2: agent.ExecuteResult.outputs:type_name -> agent.ExecuteResult.OutputsEntry
+	0,  // 3: agent.AgentService.Register:input_type -> agent.RegisterRequest
+	2,  // 4: agent.AgentService.Heartbeat:input_type -> agent.HeartbeatRequest
+	4,  // 5: agent.AgentService.Message:input_type -> agent.MessageRequest
+	6,  // 6: agent.AgentService.Subscribe:input_type -> agent.WorkerMessage
+	1,  // 7: agent.AgentService.Register:output_type -> agent.RegisterResponse
+	3,  // 8: agent.AgentService.Heartbeat:output_type -> agent.HeartbeatResponse
+	5,  // 9: agent.AgentService.Message:output_type -> agent.MessageResponse
+	8,  // 10: agent.AgentService.Subscribe:output_type -> agent.WorkItem
+	7,  // [7:11] is the sub-list for method output_type
+	3,  // [3:7] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_proto_agent_proto_init() }
@@ -420,13 +723,17 @@ func file_proto_agent_proto_init() {
 	if File_proto_agent_proto != nil {
 		return
 	}
+	file_proto_agent_proto_msgTypes[6].OneofWrappers = []any{
+		(*WorkerMessage_Subscribe)(nil),
+		(*WorkerMessage_Result)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_agent_proto_rawDesc), len(file_proto_agent_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

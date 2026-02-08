@@ -22,6 +22,7 @@ const (
 	AgentService_Register_FullMethodName  = "/agent.AgentService/Register"
 	AgentService_Heartbeat_FullMethodName = "/agent.AgentService/Heartbeat"
 	AgentService_Message_FullMethodName   = "/agent.AgentService/Message"
+	AgentService_Subscribe_FullMethodName = "/agent.AgentService/Subscribe"
 )
 
 // AgentServiceClient is the client API for AgentService service.
@@ -31,6 +32,7 @@ type AgentServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
 	Message(ctx context.Context, in *MessageRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[WorkerMessage, WorkItem], error)
 }
 
 type agentServiceClient struct {
@@ -71,6 +73,19 @@ func (c *agentServiceClient) Message(ctx context.Context, in *MessageRequest, op
 	return out, nil
 }
 
+func (c *agentServiceClient) Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[WorkerMessage, WorkItem], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &AgentService_ServiceDesc.Streams[0], AgentService_Subscribe_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[WorkerMessage, WorkItem]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AgentService_SubscribeClient = grpc.BidiStreamingClient[WorkerMessage, WorkItem]
+
 // AgentServiceServer is the server API for AgentService service.
 // All implementations must embed UnimplementedAgentServiceServer
 // for forward compatibility.
@@ -78,6 +93,7 @@ type AgentServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
 	Message(context.Context, *MessageRequest) (*MessageResponse, error)
+	Subscribe(grpc.BidiStreamingServer[WorkerMessage, WorkItem]) error
 	mustEmbedUnimplementedAgentServiceServer()
 }
 
@@ -96,6 +112,9 @@ func (UnimplementedAgentServiceServer) Heartbeat(context.Context, *HeartbeatRequ
 }
 func (UnimplementedAgentServiceServer) Message(context.Context, *MessageRequest) (*MessageResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Message not implemented")
+}
+func (UnimplementedAgentServiceServer) Subscribe(grpc.BidiStreamingServer[WorkerMessage, WorkItem]) error {
+	return status.Error(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedAgentServiceServer) mustEmbedUnimplementedAgentServiceServer() {}
 func (UnimplementedAgentServiceServer) testEmbeddedByValue()                      {}
@@ -172,6 +191,13 @@ func _AgentService_Message_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentService_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AgentServiceServer).Subscribe(&grpc.GenericServerStream[WorkerMessage, WorkItem]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AgentService_SubscribeServer = grpc.BidiStreamingServer[WorkerMessage, WorkItem]
+
 // AgentService_ServiceDesc is the grpc.ServiceDesc for AgentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -192,6 +218,13 @@ var AgentService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AgentService_Message_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Subscribe",
+			Handler:       _AgentService_Subscribe_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "proto/agent.proto",
 }

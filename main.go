@@ -177,6 +177,69 @@ func extractOutputs(res map[string]interface{}) map[string]string {
 	return outputs
 }
 
+// startSubscribe opens a long-lived stream to the orchestrator and executes work items.
+func startSubscribe(ctx context.Context, orchestratorURL, workerID string, dockerCli *client.Client, nodeImage string) {
+	conn, err := grpc.NewClient(orchestratorURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Printf("[Subscribe] Failed to connect: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	agentClient := pb.NewAgentServiceClient(conn)
+	stream, err := agentClient.Subscribe(ctx)
+	if err != nil {
+		log.Printf("[Subscribe] Failed: %v", err)
+		return
+	}
+
+	if err := stream.Send(&pb.WorkerMessage{
+		WorkerId:  workerID,
+		Msg:       &pb.WorkerMessage_Subscribe{Subscribe: &pb.SubscribeRequest{}},
+	}); err != nil {
+		log.Printf("[Subscribe] Send failed: %v", err)
+		return
+	}
+
+	ws := &workerServer{
+		dockerClient:    dockerCli,
+		nodeImage:       nodeImage,
+		orchestratorURL: orchestratorURL,
+		workerID:        workerID,
+	}
+
+	for {
+		item, err := stream.Recv()
+		if err != nil {
+			log.Printf("[Subscribe] Recv failed: %v", err)
+			return
+		}
+		log.Printf("[Subscribe] Received work: %s", item.StageRunId)
+		resp, _ := ws.ExecuteStageRun(ctx, &pb.ExecuteStageRunRequest{
+			StageId:     item.StageId,
+			StageRunId:  item.StageRunId,
+			Code:        item.Code,
+			Context:     item.Context,
+			StageConfig: item.StageConfig,
+		})
+		status := int32(0)
+		errStr := ""
+		outputs := make(map[string]string)
+		if resp != nil {
+			status = int32(resp.Status)
+			errStr = resp.Error
+			outputs = resp.Outputs
+		}
+		if err := stream.Send(&pb.WorkerMessage{
+			WorkerId: workerID,
+			Msg:      &pb.WorkerMessage_Result{Result: &pb.ExecuteResult{StageRunId: item.StageRunId, Status: status, Error: errStr, Outputs: outputs}},
+		}); err != nil {
+			log.Printf("[Subscribe] Result send failed: %v", err)
+			return
+		}
+	}
+}
+
 // startHeartbeat periodically notifies the orchestrator that this worker is alive.
 func startHeartbeat(ctx context.Context, orchestratorURL, workerID string) {
 	conn, err := grpc.NewClient(orchestratorURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -252,6 +315,7 @@ func main() {
 
 	log.Printf("[Worker] Starting server on %s (ID: %s)", grpcPort, workerID)
 	go startHeartbeat(context.Background(), orchestratorURL, workerID)
+	go startSubscribe(context.Background(), orchestratorURL, workerID, cli, nodeImage)
 
 	lis, _ := net.Listen("tcp", grpcPort)
 	srv := grpc.NewServer()

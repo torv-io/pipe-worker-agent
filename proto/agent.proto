@@ -8,6 +8,7 @@ service AgentService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
   rpc Message(MessageRequest) returns (MessageResponse);
+  rpc Subscribe(stream WorkerMessage) returns (stream WorkItem);
 }
 
 message RegisterRequest {
@@ -40,4 +41,26 @@ message MessageRequest {
 
 message MessageResponse {
   bool success = 1;
+}
+
+message WorkerMessage {
+  string worker_id = 1;
+  oneof msg {
+    SubscribeRequest subscribe = 2;
+    ExecuteResult result = 3;
+  }
+}
+message SubscribeRequest {}
+message WorkItem {
+  string stage_id = 1;
+  string stage_run_id = 2;
+  string code = 3;
+  string context = 4;
+  string stage_config = 5;
+}
+message ExecuteResult {
+  string stage_run_id = 1;
+  int32 status = 2;
+  string error = 3;
+  map<string, string> outputs = 4;
 }
