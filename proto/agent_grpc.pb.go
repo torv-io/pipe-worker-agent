@@ -19,8 +19,6 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AgentService_Register_FullMethodName  = "/agent.AgentService/Register"
-	AgentService_Heartbeat_FullMethodName = "/agent.AgentService/Heartbeat"
 	AgentService_Message_FullMethodName   = "/agent.AgentService/Message"
 	AgentService_Subscribe_FullMethodName = "/agent.AgentService/Subscribe"
 )
@@ -29,10 +27,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AgentServiceClient interface {
-	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
-	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
-	Message(ctx context.Context, in *MessageRequest, opts ...grpc.CallOption) (*MessageResponse, error)
-	Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[WorkerMessage, WorkItem], error)
+	Message(ctx context.Context, in *AgentRequest, opts ...grpc.CallOption) (*AgentResponse, error)
+	Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentRequest, AgentResponse], error)
 }
 
 type agentServiceClient struct {
@@ -43,29 +39,9 @@ func NewAgentServiceClient(cc grpc.ClientConnInterface) AgentServiceClient {
 	return &agentServiceClient{cc}
 }
 
-func (c *agentServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+func (c *agentServiceClient) Message(ctx context.Context, in *AgentRequest, opts ...grpc.CallOption) (*AgentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegisterResponse)
-	err := c.cc.Invoke(ctx, AgentService_Register_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentServiceClient) Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(HeartbeatResponse)
-	err := c.cc.Invoke(ctx, AgentService_Heartbeat_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentServiceClient) Message(ctx context.Context, in *MessageRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MessageResponse)
+	out := new(AgentResponse)
 	err := c.cc.Invoke(ctx, AgentService_Message_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -73,27 +49,25 @@ func (c *agentServiceClient) Message(ctx context.Context, in *MessageRequest, op
 	return out, nil
 }
 
-func (c *agentServiceClient) Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[WorkerMessage, WorkItem], error) {
+func (c *agentServiceClient) Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentRequest, AgentResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &AgentService_ServiceDesc.Streams[0], AgentService_Subscribe_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[WorkerMessage, WorkItem]{ClientStream: stream}
+	x := &grpc.GenericClientStream[AgentRequest, AgentResponse]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type AgentService_SubscribeClient = grpc.BidiStreamingClient[WorkerMessage, WorkItem]
+type AgentService_SubscribeClient = grpc.BidiStreamingClient[AgentRequest, AgentResponse]
 
 // AgentServiceServer is the server API for AgentService service.
 // All implementations must embed UnimplementedAgentServiceServer
 // for forward compatibility.
 type AgentServiceServer interface {
-	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
-	Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
-	Message(context.Context, *MessageRequest) (*MessageResponse, error)
-	Subscribe(grpc.BidiStreamingServer[WorkerMessage, WorkItem]) error
+	Message(context.Context, *AgentRequest) (*AgentResponse, error)
+	Subscribe(grpc.BidiStreamingServer[AgentRequest, AgentResponse]) error
 	mustEmbedUnimplementedAgentServiceServer()
 }
 
@@ -104,16 +78,10 @@ type AgentServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAgentServiceServer struct{}
 
-func (UnimplementedAgentServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Register not implemented")
-}
-func (UnimplementedAgentServiceServer) Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Heartbeat not implemented")
-}
-func (UnimplementedAgentServiceServer) Message(context.Context, *MessageRequest) (*MessageResponse, error) {
+func (UnimplementedAgentServiceServer) Message(context.Context, *AgentRequest) (*AgentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Message not implemented")
 }
-func (UnimplementedAgentServiceServer) Subscribe(grpc.BidiStreamingServer[WorkerMessage, WorkItem]) error {
+func (UnimplementedAgentServiceServer) Subscribe(grpc.BidiStreamingServer[AgentRequest, AgentResponse]) error {
 	return status.Error(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedAgentServiceServer) mustEmbedUnimplementedAgentServiceServer() {}
@@ -137,44 +105,8 @@ func RegisterAgentServiceServer(s grpc.ServiceRegistrar, srv AgentServiceServer)
 	s.RegisterService(&AgentService_ServiceDesc, srv)
 }
 
-func _AgentService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RegisterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServiceServer).Register(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentService_Register_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).Register(ctx, req.(*RegisterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentService_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HeartbeatRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServiceServer).Heartbeat(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentService_Heartbeat_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).Heartbeat(ctx, req.(*HeartbeatRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AgentService_Message_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MessageRequest)
+	in := new(AgentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -186,17 +118,17 @@ func _AgentService_Message_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: AgentService_Message_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).Message(ctx, req.(*MessageRequest))
+		return srv.(AgentServiceServer).Message(ctx, req.(*AgentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _AgentService_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(AgentServiceServer).Subscribe(&grpc.GenericServerStream[WorkerMessage, WorkItem]{ServerStream: stream})
+	return srv.(AgentServiceServer).Subscribe(&grpc.GenericServerStream[AgentRequest, AgentResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type AgentService_SubscribeServer = grpc.BidiStreamingServer[WorkerMessage, WorkItem]
+type AgentService_SubscribeServer = grpc.BidiStreamingServer[AgentRequest, AgentResponse]
 
 // AgentService_ServiceDesc is the grpc.ServiceDesc for AgentService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -205,14 +137,6 @@ var AgentService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "agent.AgentService",
 	HandlerType: (*AgentServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Register",
-			Handler:    _AgentService_Register_Handler,
-		},
-		{
-			MethodName: "Heartbeat",
-			Handler:    _AgentService_Heartbeat_Handler,
-		},
 		{
 			MethodName: "Message",
 			Handler:    _AgentService_Message_Handler,

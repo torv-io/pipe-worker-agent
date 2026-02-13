@@ -5,62 +5,118 @@ package agent;
 option go_package = "torv.io/worker-agent/proto";
 
 service AgentService {
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
-  rpc Message(MessageRequest) returns (MessageResponse);
-  rpc Subscribe(stream WorkerMessage) returns (stream WorkItem);
+  rpc Message(AgentRequest) returns (AgentResponse);
+  rpc Subscribe(stream AgentRequest) returns (stream AgentResponse);
 }
 
-message RegisterRequest {
+// ------------------------------------------------------------
+// REQUEST
+// ------------------------------------------------------------
+
+enum RequestType {
+  REQUEST_TYPE_REGISTER = 0;
+  REQUEST_TYPE_HEARTBEAT = 1;
+  REQUEST_TYPE_STAGE_RUN_MESSAGE = 2;
+  REQUEST_TYPE_SUBSCRIBE = 3;
+  REQUEST_TYPE_STAGE_START = 4;
+  REQUEST_TYPE_STAGE_FINISH = 5;
+  REQUEST_TYPE_STAGE_MESSAGE = 6;
+}
+
+message AgentRequest {
+  RequestType type = 1;
+  oneof body {
+    RegisterBody register = 2;
+    HeartbeatBody heartbeat = 3;
+    StageRunMessageBody stage_run_message = 4;
+    SubscribeBody subscribe = 5;
+    StageStartBody stage_start = 6;
+    StageFinishBody stage_finish = 7;
+    StageMessageBody stage_message = 8;
+  }
+}
+
+message RegisterBody {
   string secret = 1;
   string address = 2;
 }
 
-message RegisterResponse {
+message HeartbeatBody {
+  string worker_id = 1;
+  string status = 2;
+}
+
+message StageRunMessageBody {
+  string worker_id = 1;
+  string stage_run_id = 2;
+  string message = 3;
+  string level = 4;
+}
+
+message SubscribeBody {
+  string worker_id = 1;
+}
+
+message StageStartBody {
+  string worker_id = 1;
+  string stage_run_id = 2;
+}
+
+message StageFinishBody {
+  string worker_id = 1;
+  string stage_run_id = 2;
+  int32 status = 3;
+  string error = 4;
+  map<string, string> outputs = 5;
+}
+
+message StageMessageBody {
+  string worker_id = 1;
+  string stage_run_id = 2;
+  string message = 3;
+  string level = 4;
+}
+
+// ------------------------------------------------------------
+// RESPONSE
+// ------------------------------------------------------------
+
+enum ResponseType {
+  RESPONSE_TYPE_REGISTER = 0;
+  RESPONSE_TYPE_HEARTBEAT = 1;
+  RESPONSE_TYPE_STAGE_RUN_MESSAGE = 2;
+  RESPONSE_TYPE_WORK_ITEM = 3;
+}
+
+message AgentResponse {
+  ResponseType type = 1;
+  oneof body {
+    RegisterResponseBody register = 2;
+    HeartbeatResponseBody heartbeat = 3;
+    StageRunMessageResponseBody stage_run_message = 4;
+    WorkItemBody work_item = 5;
+  }
+}
+
+message RegisterResponseBody {
   bool success = 1;
   string worker_id = 2;
   string error = 3;
 }
 
-message HeartbeatRequest {
-  string worker_id = 1;
-  string status = 2;
-}
-
-message HeartbeatResponse {
+message HeartbeatResponseBody {
   bool success = 1;
   string assigned_worker_id = 2;
 }
 
-message MessageRequest {
-  string worker_id = 1;
-  string stage_run_id = 2;
-  string message = 3;
-  string level = 4;  // debug, info, warn, error
-}
-
-message MessageResponse {
+message StageRunMessageResponseBody {
   bool success = 1;
 }
 
-message WorkerMessage {
-  string worker_id = 1;
-  oneof msg {
-    SubscribeRequest subscribe = 2;
-    ExecuteResult result = 3;
-  }
-}
-message SubscribeRequest {}
-message WorkItem {
+message WorkItemBody {
   string stage_id = 1;
   string stage_run_id = 2;
   string code = 3;
   string context = 4;
   string stage_config = 5;
-}
-message ExecuteResult {
-  string stage_run_id = 1;
-  int32 status = 2;
-  string error = 3;
-  map<string, string> outputs = 4;
 }
