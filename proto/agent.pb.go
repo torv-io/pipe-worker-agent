@@ -24,34 +24,37 @@ const (
 type RequestType int32
 
 const (
-	RequestType_REQUEST_TYPE_REGISTER          RequestType = 0
-	RequestType_REQUEST_TYPE_HEARTBEAT         RequestType = 1
-	RequestType_REQUEST_TYPE_STAGE_RUN_MESSAGE RequestType = 2
-	RequestType_REQUEST_TYPE_SUBSCRIBE         RequestType = 3
-	RequestType_REQUEST_TYPE_STAGE_START       RequestType = 4
-	RequestType_REQUEST_TYPE_STAGE_FINISH      RequestType = 5
-	RequestType_REQUEST_TYPE_STAGE_MESSAGE     RequestType = 6
+	RequestType_REQUEST_TYPE_UNSPECIFIED       RequestType = 0
+	RequestType_REQUEST_TYPE_REGISTER          RequestType = 1
+	RequestType_REQUEST_TYPE_HEARTBEAT         RequestType = 2
+	RequestType_REQUEST_TYPE_STAGE_RUN_MESSAGE RequestType = 3
+	RequestType_REQUEST_TYPE_SUBSCRIBE         RequestType = 4
+	RequestType_REQUEST_TYPE_STAGE_START       RequestType = 5
+	RequestType_REQUEST_TYPE_STAGE_FINISH      RequestType = 6
+	RequestType_REQUEST_TYPE_STAGE_MESSAGE     RequestType = 7
 )
 
 // Enum value maps for RequestType.
 var (
 	RequestType_name = map[int32]string{
-		0: "REQUEST_TYPE_REGISTER",
-		1: "REQUEST_TYPE_HEARTBEAT",
-		2: "REQUEST_TYPE_STAGE_RUN_MESSAGE",
-		3: "REQUEST_TYPE_SUBSCRIBE",
-		4: "REQUEST_TYPE_STAGE_START",
-		5: "REQUEST_TYPE_STAGE_FINISH",
-		6: "REQUEST_TYPE_STAGE_MESSAGE",
+		0: "REQUEST_TYPE_UNSPECIFIED",
+		1: "REQUEST_TYPE_REGISTER",
+		2: "REQUEST_TYPE_HEARTBEAT",
+		3: "REQUEST_TYPE_STAGE_RUN_MESSAGE",
+		4: "REQUEST_TYPE_SUBSCRIBE",
+		5: "REQUEST_TYPE_STAGE_START",
+		6: "REQUEST_TYPE_STAGE_FINISH",
+		7: "REQUEST_TYPE_STAGE_MESSAGE",
 	}
 	RequestType_value = map[string]int32{
-		"REQUEST_TYPE_REGISTER":          0,
-		"REQUEST_TYPE_HEARTBEAT":         1,
-		"REQUEST_TYPE_STAGE_RUN_MESSAGE": 2,
-		"REQUEST_TYPE_SUBSCRIBE":         3,
-		"REQUEST_TYPE_STAGE_START":       4,
-		"REQUEST_TYPE_STAGE_FINISH":      5,
-		"REQUEST_TYPE_STAGE_MESSAGE":     6,
+		"REQUEST_TYPE_UNSPECIFIED":       0,
+		"REQUEST_TYPE_REGISTER":          1,
+		"REQUEST_TYPE_HEARTBEAT":         2,
+		"REQUEST_TYPE_STAGE_RUN_MESSAGE": 3,
+		"REQUEST_TYPE_SUBSCRIBE":         4,
+		"REQUEST_TYPE_STAGE_START":       5,
+		"REQUEST_TYPE_STAGE_FINISH":      6,
+		"REQUEST_TYPE_STAGE_MESSAGE":     7,
 	}
 )
 
@@ -185,7 +188,7 @@ func (x *AgentRequest) GetType() RequestType {
 	if x != nil {
 		return x.Type
 	}
-	return RequestType_REQUEST_TYPE_REGISTER
+	return RequestType_REQUEST_TYPE_UNSPECIFIED
 }
 
 func (x *AgentRequest) GetBody() isAgentRequest_Body {
@@ -1142,15 +1145,16 @@ const file_proto_agent_proto_rawDesc = "" +
 	"stageRunId\x12\x12\n" +
 	"\x04code\x18\x03 \x01(\tR\x04code\x12\x18\n" +
 	"\acontext\x18\x04 \x01(\tR\acontext\x12!\n" +
-	"\fstage_config\x18\x05 \x01(\tR\vstageConfig*\xe1\x01\n" +
-	"\vRequestType\x12\x19\n" +
-	"\x15REQUEST_TYPE_REGISTER\x10\x00\x12\x1a\n" +
-	"\x16REQUEST_TYPE_HEARTBEAT\x10\x01\x12\"\n" +
-	"\x1eREQUEST_TYPE_STAGE_RUN_MESSAGE\x10\x02\x12\x1a\n" +
-	"\x16REQUEST_TYPE_SUBSCRIBE\x10\x03\x12\x1c\n" +
-	"\x18REQUEST_TYPE_STAGE_START\x10\x04\x12\x1d\n" +
-	"\x19REQUEST_TYPE_STAGE_FINISH\x10\x05\x12\x1e\n" +
-	"\x1aREQUEST_TYPE_STAGE_MESSAGE\x10\x06*\x89\x01\n" +
+	"\fstage_config\x18\x05 \x01(\tR\vstageConfig*\xff\x01\n" +
+	"\vRequestType\x12\x1c\n" +
+	"\x18REQUEST_TYPE_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15REQUEST_TYPE_REGISTER\x10\x01\x12\x1a\n" +
+	"\x16REQUEST_TYPE_HEARTBEAT\x10\x02\x12\"\n" +
+	"\x1eREQUEST_TYPE_STAGE_RUN_MESSAGE\x10\x03\x12\x1a\n" +
+	"\x16REQUEST_TYPE_SUBSCRIBE\x10\x04\x12\x1c\n" +
+	"\x18REQUEST_TYPE_STAGE_START\x10\x05\x12\x1d\n" +
+	"\x19REQUEST_TYPE_STAGE_FINISH\x10\x06\x12\x1e\n" +
+	"\x1aREQUEST_TYPE_STAGE_MESSAGE\x10\a*\x89\x01\n" +
 	"\fResponseType\x12\x1a\n" +
 	"\x16RESPONSE_TYPE_REGISTER\x10\x00\x12\x1b\n" +
 	"\x17RESPONSE_TYPE_HEARTBEAT\x10\x01\x12#\n" +
