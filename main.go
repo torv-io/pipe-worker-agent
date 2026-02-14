@@ -37,18 +37,6 @@ func main() {
 	workerID := r.GetRegister().GetWorkerId()
 	log.Printf("registered: %s", workerID)
 
-	go func() {
-		tick := time.NewTicker(10 * time.Second)
-		for range tick.C {
-			if _, err := client.Message(ctx, &pb.AgentRequest{
-				Type: pb.RequestType_REQUEST_TYPE_HEARTBEAT,
-				Body: &pb.AgentRequest_Heartbeat{Heartbeat: &pb.HeartbeatBody{WorkerId: workerID, Status: "idle"}},
-			}); err != nil {
-				log.Printf("heartbeat: %v", err)
-			}
-		}
-	}()
-
 	stream, err := client.Subscribe(ctx)
 	if err != nil {
 		log.Fatalf("subscribe: %v", err)
@@ -59,6 +47,21 @@ func main() {
 	}); err != nil {
 		log.Fatalf("subscribe send: %v", err)
 	}
+
+	go func() {
+		tick := time.NewTicker(10 * time.Second)
+		for range tick.C {
+			hb := &pb.HeartbeatBody{WorkerId: workerID, Status: "idle"}
+			if err := stream.Send(&pb.AgentRequest{
+				Type: pb.RequestType_REQUEST_TYPE_HEARTBEAT,
+				Body: &pb.AgentRequest_Heartbeat{Heartbeat: hb},
+			}); err != nil {
+				log.Printf("heartbeat: %v", err)
+				return
+			}
+		}
+	}()
+
 	for {
 		resp, err := stream.Recv()
 		if err != nil {
